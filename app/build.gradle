@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.adsonik.surveillancecamera"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 26
         versionCode = 50
         versionName = "3.0.0"
@@ -70,7 +70,8 @@ android.applicationVariants.all { variant ->
 dependencies {
     compile 'com.android.support:support-v4:26.1.0'
     compile project(':opencv')
-    compile project('::Android-Utils')
+    compile project(':Android-Utils')
+    compile project(':tensorflow')
     compile 'com.greysonparrelli.permiso:permiso:0.3.0'
     implementation "android.arch.persistence.room:runtime:1.0.0"
     implementation "android.arch.lifecycle:extensions:1.0.0"

@@ -1,2 +1,3 @@
-include ':app',':opencv',':Android-Utils'
+include ':app',':opencv',':Android-Utils',':tensorflow'
 project(':opencv').projectDir = new File('OpenCV-Android/opencv')
+project(':tensorflow').projectDir = new File('tensorflow-android/tensorflow')
