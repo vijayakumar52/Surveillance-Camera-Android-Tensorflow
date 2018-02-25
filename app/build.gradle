@@ -69,7 +69,6 @@ android.applicationVariants.all { variant ->
 
 dependencies {
     compile 'com.android.support:support-v4:26.1.0'
-    compile project(':opencv')
     compile project(':Android-Utils')
     compile project(':tensorflow')
     compile 'com.greysonparrelli.permiso:permiso:0.3.0'

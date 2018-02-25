@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
                         val makeAlarm = PrefUtils.getPrefValueBoolean(this@MainActivity, PREF_MAKE_ALARM)
                         val alarmToneUri = PrefUtils.getPrefValueString(this@MainActivity, PREF_ALARM_TONE_URI)
 
-                        val cameraActivity = Intent(this@MainActivity, CameraActivity::class.java)
+                        val cameraActivity = Intent(this@MainActivity, FaceDetectorActivity::class.java)
                         cameraActivity.putExtra(INTENT_EXTRA_MAKE_ALARM, makeAlarm)
                         cameraActivity.putExtra(INTENT_EXTRA_ALARM_URI, alarmToneUri)
                         startActivity(cameraActivity)
