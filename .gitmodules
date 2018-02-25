@@ -4,3 +4,6 @@
 [submodule "Android-Utils"]
 	path = Android-Utils
 	url = https://github.com/vijayakumar52/Android-Utils.git
+[submodule "tensorflow-android"]
+	path = tensorflow-android
+	url = https://vijayakumar52@bitbucket.org/vijayakumar52/tensorflow-android.git
