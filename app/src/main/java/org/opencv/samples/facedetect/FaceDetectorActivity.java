@@ -14,11 +14,17 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
 
+import com.vijay.androidutils.ActivityHolder;
+import com.vijay.androidutils.DisplayUtils;
 import com.vijay.tensorflow.BorderedText;
 import com.vijay.tensorflow.CameraActivity;
 import com.vijay.tensorflow.Classifier;
@@ -26,12 +32,14 @@ import com.vijay.tensorflow.ImageUtils;
 import com.vijay.tensorflow.Logger;
 import com.vijay.tensorflow.MultiBoxTracker;
 import com.vijay.tensorflow.OverlayView;
+import com.vijay.tensorflow.OverlayView.DrawCallback;
 import com.vijay.tensorflow.R;
 import com.vijay.tensorflow.TensorFlowMultiBoxDetector;
 import com.vijay.tensorflow.TensorFlowObjectDetectionAPIModel;
 import com.vijay.tensorflow.TensorFlowYoloDetector;
-import com.vijay.tensorflow.OverlayView.DrawCallback;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +50,14 @@ import java.util.Vector;
  * objects.
  */
 public class FaceDetectorActivity extends CameraActivity implements OnImageAvailableListener {
+    MediaPlayer mediaPlayer;
+    boolean makeAlarm = false;
+    String toneUri;
+
+    private Handler handler = new Handler();
+    private Runnable runnable;
+    private boolean timerCompleted = true;
+
     private static final Logger LOGGER = new Logger();
 
     // Configuration values for the prepackaged multibox model.
@@ -113,6 +129,33 @@ public class FaceDetectorActivity extends CameraActivity implements OnImageAvail
     private byte[] luminanceCopy;
 
     private BorderedText borderedText;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        makeAlarm = getIntent().getBooleanExtra(MainActivity.Companion.getINTENT_EXTRA_MAKE_ALARM(), false);
+        toneUri = getIntent().getStringExtra(MainActivity.Companion.getINTENT_EXTRA_ALARM_URI());
+        if (!"".equals(toneUri)) {
+            mediaPlayer = MediaPlayer.create(FaceDetectorActivity.this, Uri.parse(toneUri));
+        }
+    }
+
+
+    @Override
+    public synchronized void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public synchronized void onStop() {
+        super.onStop();
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+            }
+        }
+    }
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -308,6 +351,7 @@ public class FaceDetectorActivity extends CameraActivity implements OnImageAvail
                         final List<Classifier.Recognition> mappedRecognitions =
                                 new LinkedList<Classifier.Recognition>();
 
+                        boolean personFound = false;
                         for (final Classifier.Recognition result : results) {
                             final RectF location = result.getLocation();
                             if (location != null && result.getConfidence() >= minimumConfidence) {
@@ -316,7 +360,13 @@ public class FaceDetectorActivity extends CameraActivity implements OnImageAvail
                                 cropToFrameTransform.mapRect(location);
                                 result.setLocation(location);
                                 mappedRecognitions.add(result);
+
+                                personFound = true;
                             }
+                        }
+                        if (personFound) {
+                            makeAlarmIfNeeded();
+                            saveImage(cropCopyBitmap);
                         }
 
                         tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
@@ -327,6 +377,81 @@ public class FaceDetectorActivity extends CameraActivity implements OnImageAvail
                     }
                 });
     }
+
+    private void makeAlarmIfNeeded() {
+        if (makeAlarm) {
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                    mediaPlayer.pause();
+                                }
+                            }
+                        }, 10000);
+                    }
+                });
+            }
+        }
+    }
+
+    private void saveImage(Bitmap bitmap) {
+        int newWidth = (int) DisplayUtils.convertDpToPixel(500, this);
+        int newHeight = (int) DisplayUtils.convertDpToPixel(500, this);
+        bitmap = getResizedBitmap(bitmap, newWidth, newHeight);
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                timerCompleted = true;
+            }
+        };
+
+        if (timerCompleted) {
+            try {
+                String folderPath = HistoryRecyclerViewAdapter.getHistoryPath(this);
+                long fileName = System.currentTimeMillis();
+
+                //Add in DB
+                MainActivity activity = (MainActivity) ActivityHolder.getInstance().getActivity();
+                History history = new History();
+                history.setCreatedTime(fileName);
+                activity.getViewModel().addItem(history);
+
+                //Add in file store
+                File newFile = new File(folderPath + File.separator + fileName + ".jpeg"); //No i18N
+                FileOutputStream fOut = new FileOutputStream(newFile);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 85, fOut);
+                fOut.flush();
+                fOut.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            timerCompleted = false;
+            handler.postDelayed(runnable, 1000);
+        }
+    }
+
+    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // CREATE A MATRIX FOR THE MANIPULATION
+        Matrix matrix = new Matrix();
+        // RESIZE THE BIT MAP
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        // "RECREATE" THE NEW BITMAP
+        Bitmap resizedBitmap = Bitmap.createBitmap(
+                bm, 0, 0, width, height, matrix, false);
+        bm.recycle();
+        return resizedBitmap;
+    }
+
 
     @Override
     protected int getLayoutId() {

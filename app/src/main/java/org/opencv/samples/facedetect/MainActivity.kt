@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         startMonitoring.setOnClickListener {
             Permiso.getInstance().requestPermissions(object : Permiso.IOnPermissionResult {
                 override fun onPermissionResult(resultSet: Permiso.ResultSet) {
-                    if (resultSet.isPermissionGranted(Manifest.permission.CAMERA)) {
+                    if (resultSet.areAllPermissionsGranted()) {
                         val makeAlarm = PrefUtils.getPrefValueBoolean(this@MainActivity, PREF_MAKE_ALARM)
                         val alarmToneUri = PrefUtils.getPrefValueString(this@MainActivity, PREF_ALARM_TONE_URI)
 

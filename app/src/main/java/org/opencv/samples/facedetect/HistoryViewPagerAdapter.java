@@ -59,7 +59,7 @@ public class HistoryViewPagerAdapter extends PagerAdapter {
         ZoomageView imageView = new ZoomageView(context);
 
         RelativeLayout.LayoutParams imageViewParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        int padding = (int) DisplayUtils.convertDpToPixel(16, context);
+        int padding = (int) DisplayUtils.convertDpToPixel(8, context);
         imageView.setPadding(padding, padding, padding, padding);
         imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imageView.setImageBitmap(getImage(position));
