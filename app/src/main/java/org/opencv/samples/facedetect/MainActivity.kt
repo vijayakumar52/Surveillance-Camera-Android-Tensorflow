@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.view.View
 import android.widget.*
 import com.adsonik.surveillancecamera.R
 import com.greysonparrelli.permiso.Permiso
@@ -105,6 +106,7 @@ class MainActivity : AppCompatActivity() {
         }
         val gridLayoutManager = GridLayoutManager(this, 3)
         val recyclerView = findViewById<RecyclerView>(R.id.rvIntruderHistory)
+        val emptyView  = findViewById<TextView>(R.id.pvEmptyView);
         recyclerView.layoutManager = gridLayoutManager
 
         viewModel.allItems.observe(this, Observer { histories ->
@@ -114,6 +116,14 @@ class MainActivity : AppCompatActivity() {
             }else{
                 val historyAdapter = recyclerView.adapter as HistoryRecyclerViewAdapter
                 historyAdapter.notifyDataChanged(histories)
+            }
+
+            if(histories != null && histories.size > 0){
+                recyclerView.visibility = View.VISIBLE
+                emptyView.visibility = View.GONE
+            }else{
+                recyclerView.visibility = View.GONE
+                emptyView.visibility = View.VISIBLE
             }
 
         })
